@@ -8,6 +8,7 @@ class Pole:  # Klasa Pole i jego incjalizacja
     def __init__(self, x, y):
         self.x = x
         self.y = y
+        self.owoc = None
         self.map = [['#' for i in range(x)] for y in range(y)]
         next = ['1']
         for col in range(2, self.x, 4):
@@ -150,7 +151,7 @@ def ruch(pole, snake, owoc, komenda, gracz):
         while not valid:
             x = random.randint(1, pole.x - 1)
             y = random.randint(1, pole.y - 1)
-            valid, owoc = is_valid([x, y], 1, pole, 'owoc', 0)
+            valid, pole.owoc = is_valid([x, y], 1, pole, 'owoc', 0)
         return False
 
 
@@ -186,6 +187,8 @@ def is_valid(new, create, pole, type, gracz):
             return True, snake
         else:
             owoc = Owoc(new[0], new[1], pole.map)
+            owoc.x = new[0]
+            owoc.y = new[1]
             return True, owoc
     else:
         try:

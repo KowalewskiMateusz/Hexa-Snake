@@ -77,6 +77,7 @@ class MainWindow(QMainWindow, Ui_Dialog):
         self.lost_1 = False
         self.lost_2 = False
         self.multi = False
+        self.ai = False
         self.online = False
         self.record = False
         self.replay = False
@@ -104,7 +105,7 @@ class MainWindow(QMainWindow, Ui_Dialog):
             while not valid:
                 x = random.randint(1, self.pole.x - 1)
                 y = random.randint(1, self.pole.y - 1)
-                valid, self.owoc = is_valid([x, y], 1, self.pole, 'owoc', 0)
+                valid, self.pole.owoc = is_valid([x, y], 1, self.pole, 'owoc', 0)
 
             valid = False
             while not valid:
@@ -113,7 +114,7 @@ class MainWindow(QMainWindow, Ui_Dialog):
                 valid, self.snake_1 = is_valid([x, y], 1, self.pole, 'snake', 1)
 
             valid = False
-            if self.multi:
+            if self.multi or self.ai:
                 while not valid:
                     x = random.randint(1, self.pole.x - 1)
                     y = random.randint(1, self.pole.y - 1)
@@ -191,9 +192,12 @@ class MainWindow(QMainWindow, Ui_Dialog):
                 self.record = False
         else:
             if len(self.keys1) > 0:
-                self.lost_1 = ruch(self.pole, self.snake_1, self.owoc, self.keys1[-1], 1)
+                self.lost_1 = ruch(self.pole, self.snake_1, self.pole.owoc, self.keys1[-1], 1)
             if self.multi and len(self.keys2):
-                self.lost_2 = ruch(self.pole, self.snake_2, self.owoc, self.keys2[-1], 2)
+                self.lost_2 = ruch(self.pole, self.snake_2, self.pole.owoc, self.keys2[-1], 2)
+            if self.ai:
+                self.move = self.bot()
+                self.lost_2 = ruch(self.pole, self.snake_2, self.pole.owoc, self.move, 2)
             if self.lost_1 or self.lost_2:
                 self.timer.stop()
                 self.clear_keys()
@@ -315,6 +319,50 @@ class MainWindow(QMainWindow, Ui_Dialog):
                 self.pole.map[int(tile.attrib['x'])][int(tile.attrib['y'])] = str(tile.attrib['sign'])
             self.history = copy.deepcopy(self.pole.map)
             self.moves.append(self.history)
+
+    def bot(self):
+        self.pos_moves = {'1': 'q', '2': 'e',' 3': 'd', '4': 'a', '5': 'z', '6': 'c'}
+        self.bot_y = self.snake_2.body[-1]
+        self.bot_x = self.snake_2.body[-2]
+        self.direction_x = self.pole.owoc.x - self.bot_x
+        self.direction_y = self.pole.owoc.y - self.bot_y
+        move = None
+        if self.direction_x == 0 and self.direction_y < 0:
+            move = 'e'
+        if self.direction_x == 0 and self.direction_y > 0:
+            move = 'z'
+        if self.direction_x > 0 and self.direction_y == 0:
+            move = 'd'
+        if self.direction_x < 0 and self.direction_y < 0:
+            move = 'a'
+        if self.direction_x > 0 and self.direction_y > 0:
+            move = 'c'
+        if self.direction_x < 0 and self.direction_y < 0:
+            move = 'q'
+        if self.direction_x < 0 and self.direction_y > 0:
+            move = 'z'
+        if self.direction_x > 0 and self.direction_y < 0:
+            move = 'e'
+
+        valid = self.check(move)
+        if valid:
+            return move
+        else:
+            for a in self.pos_moves.keys():
+                move = self.pos_moves[a]
+                valid = self.check(move)
+                if valid:
+                    return move
+        return 'q'
+
+    def check(self,komenda):
+        pole = copy.deepcopy(self.pole)
+        snake_2 = copy.deepcopy(self.snake_2)
+        valid = ruch(pole, snake_2, pole.owoc,komenda ,2)
+        if valid:
+            return False
+        else:
+            return True
 
 
 if __name__ == "__main__":
